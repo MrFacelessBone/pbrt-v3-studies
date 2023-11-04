@@ -83,7 +83,7 @@ class Light {
     const int nSamples;
     const MediumInterface mediumInterface;
 
-  protected:
+  public:
     // Light Protected Data
     const Transform LightToWorld, WorldToLight;
 };

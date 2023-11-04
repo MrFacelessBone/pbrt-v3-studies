@@ -12,13 +12,32 @@ Spectrum ConventionalIntegrator::Li(const RayDifferential& ray, const Scene& sce
     Spectrum L(0.);
     SurfaceInteraction isect;
 
-    if (!scene.Intersect(ray, & isect))
+    if (!scene.Intersect(ray, &isect))
     {
         return L;
     }
 
-    Spectrum L2(1.0);
-    return L2;
+    Normal3f n = isect.shading.n;
+    Vector3f wo = isect.wo;
+
+    SurfaceInteraction isecttmp;
+
+    for (const auto& light : scene.lights) {
+        // Lichtposition
+        Point3f lightPos = light->LightToWorld(Point3f(0, 0, 0));  // falls LightToWorld nicht klappt, von
+                                // protected auf public setzen
+        Ray visibilityRay = isect.SpawnRayTo(lightPos);
+        Ray vRay = Ray(isect.p, Vector3f(lightPos - isect.p));
+        
+        bool isVisible = !scene.IntersectP(vRay);
+
+        if (isVisible) {
+            Spectrum li = light->Power() / (4 * Pi * DistanceSquared(lightPos, isect.p));  // Abstandsgesetz
+            Vector3f l = Normalize(Vector3f(lightPos - isect.p));  // Vector von hit zu Lichtquelle
+            L += li * AbsDot(n, l);             // Skalarprodukt
+        }
+    }
+    return L;
 }
 
 
